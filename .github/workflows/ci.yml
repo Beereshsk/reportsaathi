@@ -85,4 +85,4 @@ jobs:
 
       - name: Run automated health and database smoke test
         run: |
-          python backend/tests/test_smoke.py
+          python -m unittest backend.tests.test_smoke

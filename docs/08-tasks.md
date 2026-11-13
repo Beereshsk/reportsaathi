@@ -85,6 +85,8 @@ flowchart TD
 
 **Local runability repair (2026-11-13):** Backend lint and Mypy checks now pass. The frontend serves the prescription notes workflow at port 3000 with explicit HTML, JavaScript, and CSS MIME types. Typed notes are posted to `POST /api/notes` and returned for display without persistence; image preview remains local. Mock extraction results are not presented as real readings.
 
+**CI smoke test import fix (2026-11-13):** The integration workflow now runs the smoke tests as `python -m unittest backend.tests.test_smoke` from the repository root, preserving the package import path. All three smoke tests pass with this invocation.
+
 ---
 
 #### Task 02 (PR-02): Deployed Walking Skeleton (Live Infrastructure)
