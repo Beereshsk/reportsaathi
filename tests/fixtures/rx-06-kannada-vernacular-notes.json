@@ -1,0 +1,39 @@
+{
+  "id": "rx-06-kannada-vernacular-notes",
+  "description": "Bilingual handwritten prescription with doctor instructions written partially in Kannada script",
+  "category": "vernacular_bilingual",
+  "input": {
+    "mode": "text",
+    "raw_text": "ಪ್ಯಾರಸಿಟಮಾಲ್ 650mg - ಬೆಳಿಗ್ಗೆ 1, ರಾತ್ರಿ 1 (ಊಟದ ನಂತರ)\nಆಂಟಾಸಿಡ್ ಸಿರಪ್ - 2 ಚಮಚ ಮಲಗುವ ಮುನ್ನ",
+    "language": "kn"
+  },
+  "expected_output": {
+    "total_medicines": 2,
+    "has_ambiguous_entries": false,
+    "medicines": [
+      {
+        "raw_name": "ಪ್ಯಾರಸಿಟಮಾಲ್ 650mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "after_food",
+        "is_ambiguous": false
+      },
+      {
+        "raw_name": "ಆಂಟಾಸಿಡ್ ಸಿರಪ್",
+        "timing": {
+          "morning": 0,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "before_food",
+        "is_ambiguous": false
+      }
+    ]
+  },
+  "safety_assertions": {
+    "must_parse_kannada_numerals_and_text": true
+  }
+}

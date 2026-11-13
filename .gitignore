@@ -1,0 +1,19 @@
+# Local Python environments and generated caches
+.venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.mypy_cache/
+
+# Local runtime data and configuration
+backend/health.db
+.env
+.env.*
+!.env.example
+
+# Frontend dependencies and build output
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/

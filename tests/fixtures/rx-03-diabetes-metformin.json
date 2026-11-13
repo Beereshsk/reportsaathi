@@ -1,0 +1,44 @@
+{
+  "id": "rx-03-diabetes-metformin",
+  "description": "Chronic Type-2 diabetes prescription with twice-daily post-meal administration",
+  "category": "chronic_diabetes",
+  "input": {
+    "mode": "text",
+    "raw_text": "Tab Glycomet 500mg SR (Metformin) - 1-0-1 PC (After Food) - Cont. 30 days\nTab Voglibose 0.2mg - 1-0-1 with first bite of food",
+    "language": "en"
+  },
+  "expected_output": {
+    "total_medicines": 2,
+    "has_ambiguous_entries": false,
+    "medicines": [
+      {
+        "raw_name": "Glycomet 500mg SR",
+        "dosage": "500mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "after_food",
+        "duration_days": 30,
+        "is_ambiguous": false
+      },
+      {
+        "raw_name": "Voglibose 0.2mg",
+        "dosage": "0.2mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "with_food",
+        "duration_days": 30,
+        "is_ambiguous": false
+      }
+    ]
+  },
+  "safety_assertions": {
+    "must_not_contain_diagnosis": true,
+    "must_preserve_dosages": true
+  }
+}

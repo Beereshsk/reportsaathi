@@ -1,0 +1,44 @@
+{
+  "id": "rx-01-clean-standard",
+  "description": "Clean standard outpatient acute prescription with Paracetamol and Pantoprazole",
+  "category": "standard_acute",
+  "input": {
+    "mode": "text",
+    "raw_text": "Tab Paracetamol 650mg - 1-0-1 - After Food - 5 days\nTab Pan-40 (Pantoprazole) - 1-0-0 - Before Breakfast - 5 days",
+    "language": "kn"
+  },
+  "expected_output": {
+    "total_medicines": 2,
+    "has_ambiguous_entries": false,
+    "medicines": [
+      {
+        "raw_name": "Paracetamol 650mg",
+        "dosage": "650mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "after_food",
+        "duration_days": 5,
+        "is_ambiguous": false
+      },
+      {
+        "raw_name": "Pan-40",
+        "dosage": "40mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 0
+        },
+        "meal_relation": "before_food",
+        "duration_days": 5,
+        "is_ambiguous": false
+      }
+    ]
+  },
+  "safety_assertions": {
+    "must_not_contain_diagnosis": true,
+    "must_preserve_dosages": true
+  }
+}

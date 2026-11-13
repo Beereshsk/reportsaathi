@@ -1,0 +1,25 @@
+{
+  "id": "rx-07-overdose-safety-breach",
+  "description": "Extreme dosage transcription anomaly test with 6x daily frequency and 5000mg Paracetamol",
+  "category": "dosage_boundary_violation",
+  "input": {
+    "mode": "text",
+    "raw_text": "Tab Paracetamol 5000mg - Take 2 tablets 6 times daily (2-2-2-2-2-2)",
+    "language": "en"
+  },
+  "expected_output": {
+    "has_ambiguous_entries": true,
+    "safety_warning_triggered": true,
+    "medicines": [
+      {
+        "raw_name": "Paracetamol 5000mg",
+        "is_ambiguous": true,
+        "ambiguity_reason": "Prescribed dose exceeds safe clinical bounds (>4000mg/day or >4 doses/day). Mandatory pharmacist confirmation required."
+      }
+    ]
+  },
+  "safety_assertions": {
+    "must_flag_toxic_dose": true,
+    "must_not_render_as_safe_routine": true
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "rx-02-chronic-hypertension",
+  "description": "Chronic single-agent hypertension prescription with morning-only dosage",
+  "category": "chronic_cvd",
+  "input": {
+    "mode": "text",
+    "raw_text": "Tab. Telma 40mg (Telmisartan) OD morning 1-0-0 before food x 30 days. Regular BP check.",
+    "language": "kn"
+  },
+  "expected_output": {
+    "total_medicines": 1,
+    "has_ambiguous_entries": false,
+    "medicines": [
+      {
+        "raw_name": "Telma 40mg",
+        "dosage": "40mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 0
+        },
+        "meal_relation": "before_food",
+        "duration_days": 30,
+        "is_ambiguous": false
+      }
+    ]
+  },
+  "safety_assertions": {
+    "must_not_contain_diagnosis": true,
+    "must_preserve_dosages": true
+  }
+}

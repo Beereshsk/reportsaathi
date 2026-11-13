@@ -1,0 +1,31 @@
+[project]
+name = "aushadha-sathi-backend"
+version = "1.0.0"
+description = "Aushadha Sathi - Ephemeral Bilingual Prescription Assistant Backend"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.0.0",
+    "pydantic>=2.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "gunicorn>=21.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true

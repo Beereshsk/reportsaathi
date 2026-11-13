@@ -1,0 +1,54 @@
+name: Staging Deployment Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-backend-staging:
+    name: Deploy Backend to Render Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy Hook
+        if: env.RENDER_DEPLOY_HOOK != ''
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
+        run: |
+          curl -s -X POST "$RENDER_DEPLOY_HOOK"
+
+  deploy-frontend-staging:
+    name: Deploy Frontend to Vercel Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        if: env.VERCEL_TOKEN != ''
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+
+  post-deploy-smoke-test:
+    name: Post-Deployment Smoke Test (Health & DB Check)
+    needs: [deploy-backend-staging]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Staging Backend Health Endpoint
+        run: |
+          STAGING_URL="${{ secrets.STAGING_BACKEND_URL }}"
+          if [ -z "$STAGING_URL" ]; then
+            echo "STAGING_BACKEND_URL secret not set. Skipping live external health probe."
+            exit 0
+          fi
+          echo "Probing $STAGING_URL/api/health..."
+          RESPONSE=$(curl -s --fail --max-time 15 "$STAGING_URL/api/health")
+          echo "Response: $RESPONSE"
+          # Verify status pass and database connected
+          echo "$RESPONSE" | grep -q '"status":"pass"'
+          echo "$RESPONSE" | grep -q '"status":"connected"'
+          echo "Live staging smoke test passed!"

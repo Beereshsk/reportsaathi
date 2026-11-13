@@ -1,0 +1,407 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Aushadha Sathi API",
+    "version": "1.0.0",
+    "description": "Stateless bilingual prescription comprehension API compliant with DPDP Act 2023."
+  },
+  "servers": [
+    {
+      "url": "https://api.reportsaathi.in/v1",
+      "description": "Production Server"
+    },
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Development / Staging Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Probe",
+        "description": "Lightweight health and liveness probe reading status from database.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Service is healthy and database is connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/extract": {
+      "post": {
+        "summary": "Extract Prescription Schedule",
+        "description": "Extracts medicine schedules and timings from an image or raw text.",
+        "operationId": "extractPrescription",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrescriptionRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": ["kn", "en"],
+                    "default": "kn"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully extracted schedule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file type or corrupt body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload exceeds 10MB limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Blurry prescription cannot be processed safely",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes": {
+      "post": {
+        "summary": "Process User-Entered Prescription Notes",
+        "description": "Validates and returns manually entered notes for the current response only. Prescription text is not persisted and no medicine details are inferred.",
+        "operationId": "processPrescriptionNotes",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PrescriptionNotesRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notes returned without persistent storage",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrescriptionNotesResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or empty notes",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "413": {
+            "description": "Notes exceed the request limit"
+          }
+        }
+      }
+    },
+    "/simplify": {
+      "post": {
+        "summary": "Simplify Medical Terms",
+        "description": "Translates clinical abbreviations into plain Kannada and English.",
+        "operationId": "simplifyTerms",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimplifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully simplified abbreviations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimplifyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DatabaseHealth": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["connected", "disconnected", "unconfigured"]
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": ["status", "value"]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pass", "fail"]
+          },
+          "service": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "database": {
+            "$ref": "#/components/schemas/DatabaseHealth"
+          }
+        },
+        "required": ["status", "service", "version", "timestamp", "database"]
+      },
+      "TimingSlot": {
+        "type": "object",
+        "properties": {
+          "morning": { "type": "integer", "minimum": 0 },
+          "afternoon": { "type": "integer", "minimum": 0 },
+          "night": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["morning", "afternoon", "night"]
+      },
+      "DisplayText": {
+        "type": "object",
+        "properties": {
+          "kn": { "type": "string" },
+          "en": { "type": "string" }
+        },
+        "required": ["kn", "en"]
+      },
+      "MedicineItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "raw_name": { "type": "string" },
+          "canonical_name": { "type": "string" },
+          "form": {
+            "type": "string",
+            "enum": ["tablet", "capsule", "syrup", "injection", "ointment", "other"]
+          },
+          "dosage": { "type": "string" },
+          "timing": { "$ref": "#/components/schemas/TimingSlot" },
+          "meal_relation": {
+            "type": "string",
+            "enum": ["before_food", "after_food", "with_food", "unspecified"]
+          },
+          "duration_days": {
+            "type": ["integer", "null"]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "is_ambiguous": { "type": "boolean" },
+          "ambiguity_reason": { "type": "string" },
+          "display_text": { "$ref": "#/components/schemas/DisplayText" }
+        },
+        "required": [
+          "id",
+          "raw_name",
+          "form",
+          "dosage",
+          "timing",
+          "meal_relation",
+          "duration_days",
+          "confidence",
+          "is_ambiguous"
+        ]
+      },
+      "PrescriptionRequest": {
+        "type": "object",
+        "properties": {
+          "image_base64": { "type": "string" },
+          "raw_text": { "type": "string" },
+          "language": {
+            "type": "string",
+            "enum": ["kn", "en"],
+            "default": "kn"
+          }
+        }
+      },
+      "ExtractionResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "request_id": { "type": "string" },
+          "total_medicines_detected": { "type": "integer", "minimum": 0 },
+          "has_ambiguous_entries": { "type": "boolean" },
+          "language": {
+            "type": "string",
+            "enum": ["kn", "en"]
+          },
+          "medicines": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MedicineItem" }
+          },
+          "disclaimer": { "type": "string" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "success",
+          "total_medicines_detected",
+          "has_ambiguous_entries",
+          "language",
+          "medicines",
+          "disclaimer",
+          "timestamp"
+        ]
+      },
+      "SimplifyRequest": {
+        "type": "object",
+        "properties": {
+          "terms": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "language": {
+            "type": "string",
+            "enum": ["kn", "en"],
+            "default": "kn"
+          }
+        },
+        "required": ["terms"]
+      },
+      "SimplifiedTerm": {
+        "type": "object",
+        "properties": {
+          "term": { "type": "string" },
+          "meaning_en": { "type": "string" },
+          "meaning_kn": { "type": "string" }
+        },
+        "required": ["term", "meaning_en", "meaning_kn"]
+      },
+      "SimplifyResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "simplified_terms": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SimplifiedTerm" }
+          }
+        },
+        "required": ["success", "simplified_terms"]
+      },
+      "PrescriptionNotesRequest": {
+        "type": "object",
+        "properties": {
+          "raw_text": { "type": "string", "minLength": 1, "maxLength": 20000 },
+          "language": { "type": "string", "enum": ["kn", "en"], "default": "en" }
+        },
+        "required": ["raw_text"]
+      },
+      "PrescriptionNotesResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "const": true },
+          "request_id": { "type": "string" },
+          "notes_text": { "type": "string" },
+          "language": { "type": "string", "enum": ["kn", "en"] },
+          "disclaimer": { "type": "string" }
+        },
+        "required": ["success", "request_id", "notes_text", "language", "disclaimer"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "default": false },
+          "error_code": {
+            "type": "string",
+            "enum": [
+              "INVALID_REQUEST",
+              "INVALID_FILE_TYPE",
+              "PAYLOAD_TOO_LARGE",
+              "BLURRY_PRESCRIPTION",
+              "RATE_LIMIT_EXCEEDED",
+              "INTERNAL_SERVER_ERROR"
+            ]
+          },
+          "message": { "type": "string" },
+          "tips": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["success", "error_code", "message"]
+      }
+    }
+  }
+}

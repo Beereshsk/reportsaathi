@@ -1,0 +1,88 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-checks:
+    name: Backend Lint, Type-Check & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Linting check
+        run: |
+          python backend/lint.py
+
+      - name: Type check
+        run: |
+          python backend/typecheck.py
+
+      - name: Run unit & contract test suite (including 10 fixtures validation)
+        run: |
+          python backend/run_tests.py
+
+  frontend-checks:
+    name: Frontend Lint, Type-Check & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Frontend linting
+        run: |
+          node frontend/lint.js
+
+      - name: Frontend type checks
+        run: |
+          node frontend/typecheck.js
+
+      - name: Frontend tests & smoke test
+        run: |
+          node frontend/run_tests.js
+
+  integration-smoke-test:
+    name: Integrated E2E Smoke Test
+    needs: [backend-checks, frontend-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+
+      - name: Start backend server in background
+        run: |
+          python -m backend.app.main &
+          sleep 3
+
+      - name: Run automated health and database smoke test
+        run: |
+          python backend/tests/test_smoke.py

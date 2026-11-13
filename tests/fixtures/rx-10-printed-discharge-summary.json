@@ -1,0 +1,70 @@
+{
+  "id": "rx-10-printed-discharge-summary",
+  "description": "Multi-item printed hospital discharge prescription summary with 5 medications and duration specifications",
+  "category": "printed_discharge_complex",
+  "input": {
+    "mode": "text",
+    "raw_text": "DISCHARGE MEDICATIONS:\n1. Tab Augmentin 625mg - 1-0-1 PC x 5 days\n2. Tab Chymoral Forte - 1-0-1 AC x 5 days\n3. Tab Pantocid 40mg - 1-0-0 BBF x 10 days\n4. Tab Dolo 650mg - 1-0-1 SOS for fever/pain\n5. Syp Cremaffin - 2 tsp at bedtime x 3 days",
+    "language": "kn"
+  },
+  "expected_output": {
+    "total_medicines": 5,
+    "has_ambiguous_entries": false,
+    "medicines": [
+      {
+        "raw_name": "Augmentin 625mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "after_food",
+        "duration_days": 5
+      },
+      {
+        "raw_name": "Chymoral Forte",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "before_food",
+        "duration_days": 5
+      },
+      {
+        "raw_name": "Pantocid 40mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 0
+        },
+        "meal_relation": "before_food",
+        "duration_days": 10
+      },
+      {
+        "raw_name": "Dolo 650mg",
+        "timing": {
+          "morning": 1,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "after_food",
+        "duration_days": null
+      },
+      {
+        "raw_name": "Cremaffin",
+        "timing": {
+          "morning": 0,
+          "afternoon": 0,
+          "night": 1
+        },
+        "meal_relation": "before_food",
+        "duration_days": 3
+      }
+    ]
+  },
+  "safety_assertions": {
+    "must_preserve_all_five_items": true,
+    "must_not_drop_sos_status": true
+  }
+}
