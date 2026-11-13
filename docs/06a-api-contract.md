@@ -19,7 +19,7 @@
 ## 2. Endpoints
 
 ### 2.1 `POST /extract`
-Extracts medicine names, dosage frequencies, and meal timings from an uploaded prescription image or raw text, and maps them to structured bilingual schedule cards.
+Parses explicit dosage, schedule, meal, and duration tokens from manually entered text. It preserves unrecognized details and flags missing fields; it does not identify medicine brands or infer missing values. Image OCR returns `501 OCR_UNAVAILABLE` until an OCR adapter is implemented.
 
 #### Request Headers
 | Header | Type | Required | Description |
@@ -114,6 +114,7 @@ Extracts medicine names, dosage frequencies, and meal timings from an uploaded p
     "message": "Image size exceeds the 10MB limit. Please compress or crop the photo."
   }
   ```
+* **501 Not Implemented (Image OCR Unavailable):** The image-reading adapter is not configured. Users must not be shown guessed medicine details.
 * **422 Unprocessable Entity (Blurry or Unreadable Prescription):**
   ```json
   {
@@ -166,7 +167,7 @@ Takes clinical abbreviations or complex medical terminology and returns determin
 ```
 
 ### 2.3 `POST /notes`
-Accepts text a user has manually read from a prescription and returns the same text for display. The endpoint does not identify medicines, infer directions, or persist prescription data.
+Accepts manually entered prescription text and returns it verbatim for clients that need a notes-only flow. The main assistant uses `/extract` to return parsed fields. This endpoint does not persist prescription data.
 
 #### Request Body (JSON)
 ```json

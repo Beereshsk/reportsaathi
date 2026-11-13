@@ -1,6 +1,6 @@
 """
 Aushadha Sathi - Backend Application
-Provides HTTP endpoints for health probes, mock extraction, and term simplification.
+Provides HTTP endpoints for health probes, conservative text parsing, and term simplification.
 Reference: docs/06a-api-contract.md, docs/08-tasks.md (Task 01)
 """
 
@@ -12,16 +12,13 @@ from uuid import uuid4
 from flask import Flask, jsonify, make_response, request
 
 from .database import init_db, read_health_value
+from .extraction import parse_manual_prescription
 from .models.schemas import (
     DatabaseHealth,
-    DisplayText,
-    ErrorResponse,
     ExtractionResponse,
     HealthResponse,
-    MedicineItem,
     SimplifiedTerm,
     SimplifyResponse,
-    TimingSlot,
 )
 
 app = Flask(__name__)
@@ -74,74 +71,54 @@ def get_openapi_schema():
 
 
 @app.route("/api/extract", methods=["POST", "OPTIONS"])
-def mock_extract():
-    """
-    POST /api/extract
-    Mock extraction endpoint matching DoD: Deterministic responses matching rx-01-clean-standard.json.
-    """
+def extract_prescription():
+    """Parse explicit typed instructions without guessing or saving them."""
     if request.method == "OPTIONS":
         return make_response("", 204)
 
-    req_data = {}
-    if request.is_json:
-        req_data = request.get_json() or {}
+    req_data = request.get_json(silent=True) if request.is_json else None
+    if request.files or (isinstance(req_data, dict) and req_data.get("image_base64")):
+        return jsonify({
+            "success": False,
+            "error_code": "OCR_UNAVAILABLE",
+            "message": "Image reading is not enabled. Type the prescription text you can read.",
+        }), 501
+    if not isinstance(req_data, dict):
+        return jsonify({
+            "success": False,
+            "error_code": "INVALID_REQUEST",
+            "message": "Send prescription text as JSON.",
+        }), 400
 
-    raw_text = req_data.get("raw_text", "")
+    raw_text = req_data.get("raw_text")
+    language = req_data.get("language", "en")
+    if not isinstance(raw_text, str) or not raw_text.strip():
+        return jsonify({
+            "success": False,
+            "error_code": "INVALID_REQUEST",
+            "message": "Enter the prescription text you can read.",
+        }), 400
+    if len(raw_text) > 20_000:
+        return jsonify({
+            "success": False,
+            "error_code": "PAYLOAD_TOO_LARGE",
+            "message": "Prescription text must be 20,000 characters or fewer.",
+        }), 413
+    if language not in ("kn", "en"):
+        return jsonify({
+            "success": False,
+            "error_code": "INVALID_REQUEST",
+            "message": "Language must be 'kn' or 'en'.",
+        }), 400
 
-    # Check for blurry simulation
-    if "~~~~~" in raw_text or req_data.get("simulated_blur_score", 1.0) < 0.5:
-        err = ErrorResponse(
-            error_code="BLURRY_PRESCRIPTION",
-            message="The prescription text is too blurry to extract reliably without guessing.",
-            tips=[
-                "Ensure sufficient overhead lighting.",
-                "Hold the phone parallel to the paper.",
-                "Avoid shadows across the handwriting.",
-            ],
-        )
-        return jsonify(err.to_dict()), 422
-
-    # Deterministic extraction response matching rx-01-clean-standard.json
+    medicines = parse_manual_prescription(raw_text)
     response_data = ExtractionResponse(
         success=True,
-        request_id="req-mock-rx-01",
-        total_medicines_detected=2,
-        has_ambiguous_entries=False,
-        language=req_data.get("language", "kn"),
-        medicines=[
-            MedicineItem(
-                id="med-1",
-                raw_name="Paracetamol 650mg",
-                canonical_name="Paracetamol",
-                form="tablet",
-                dosage="650mg",
-                timing=TimingSlot(morning=1, afternoon=0, night=1),
-                meal_relation="after_food",
-                duration_days=5,
-                confidence=0.96,
-                is_ambiguous=False,
-                display_text=DisplayText(
-                    kn="ಪ್ಯಾರಸಿಟಮಾಲ್ 650mg: ಬೆಳಿಗ್ಗೆ 1, ರಾತ್ರಿ 1 (ಊಟದ ನಂತರ, 5 ದಿನಗಳು)",
-                    en="Paracetamol 650mg: 1 Morning, 1 Night (After Food, 5 Days)",
-                ),
-            ),
-            MedicineItem(
-                id="med-2",
-                raw_name="Pan-40",
-                canonical_name="Pantoprazole",
-                form="tablet",
-                dosage="40mg",
-                timing=TimingSlot(morning=1, afternoon=0, night=0),
-                meal_relation="before_food",
-                duration_days=5,
-                confidence=0.94,
-                is_ambiguous=False,
-                display_text=DisplayText(
-                    kn="ಪ್ಯಾನ್-40: ಬೆಳಿಗ್ಗೆ 1 (ಉಪಹಾರಕ್ಕೆ ಮುನ್ನ, 5 ದಿನಗಳು)",
-                    en="Pan-40: 1 Morning (Before Breakfast, 5 Days)",
-                ),
-            ),
-        ],
+        request_id=f"req-{uuid4().hex[:12]}",
+        total_medicines_detected=len(medicines),
+        has_ambiguous_entries=any(medicine.is_ambiguous for medicine in medicines),
+        language=language,
+        medicines=medicines,
         disclaimer=(
             "Please confirm all medicine details with your doctor or pharmacist "
             "before taking any medicine."

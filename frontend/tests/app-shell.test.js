@@ -21,5 +21,5 @@ test("frontend serves the prescription assistant workflow", () => {
   assert.match(html, /src="app\.js"/);
   assert.ok(fs.existsSync(path.join(root, "app.js")));
   assert.ok(fs.existsSync(path.join(root, "styles.css")));
-  assert.match(app, /\$\{apiBaseUrl\}\/notes/);
+  assert.match(app, /\$\{apiBaseUrl\}\/extract/);
 });

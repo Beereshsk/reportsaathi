@@ -38,7 +38,7 @@
     "/extract": {
       "post": {
         "summary": "Extract Prescription Schedule",
-        "description": "Extracts medicine schedules and timings from an image or raw text.",
+        "description": "Parses explicit fields in manually entered text without guessing or retaining prescription data. Image OCR is not configured and returns OCR_UNAVAILABLE.",
         "operationId": "extractPrescription",
         "requestBody": {
           "required": true,
@@ -115,6 +115,14 @@
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
+              }
+            }
+          },
+          "501": {
+            "description": "Image reading is not configured",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -387,6 +395,7 @@
             "type": "string",
             "enum": [
               "INVALID_REQUEST",
+              "OCR_UNAVAILABLE",
               "INVALID_FILE_TYPE",
               "PAYLOAD_TOO_LARGE",
               "BLURRY_PRESCRIPTION",

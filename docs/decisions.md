@@ -68,9 +68,9 @@
 ## ADR-006: Local Development Runs Frontend and API Separately
 * **Date:** 2026-11-13
 * **Status:** Accepted
-* **Context:** The frontend needs to send user-entered prescription notes to the backend while preserving the product's no-retention rule.
-* **Decision:** Run the frontend from `frontend/` with `npm start`; run the API from `backend/` with `python -m app.main`. `POST /api/notes` validates and returns the entered text in the response only; it never writes notes to the database. The frontend must not display mock extraction results as readings from a user's prescription.
-* **Consequences:** Manual notes require the API and are processed in request memory only. Image recognition requires a real approved implementation before it can be enabled.
+* **Context:** The frontend needs backend-processed prescription fields while preserving the product's no-retention rule.
+* **Decision:** Run the frontend from `frontend/` with `npm start`; run the API from `backend/` with `python -m app.main`. `POST /api/extract` parses only explicit text tokens and returns missing details as ambiguous; it never writes prescription data to the database. Image OCR stays unavailable until a real adapter is implemented.
+* **Consequences:** Typed notes are structured in request memory only. The frontend can display returned fields without presenting canned demo medicines as a user's prescription.
 
 ---
 

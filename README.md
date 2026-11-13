@@ -21,7 +21,7 @@ cd frontend
 npm start
 ```
 
-Open <http://localhost:3000>. When you submit typed notes, the frontend sends them to `POST http://localhost:5000/api/notes`; the API validates and returns them for display without saving them. Check API health at <http://localhost:5000/api/health>. Prescription OCR is not enabled.
+Open <http://localhost:3000>. Typed instructions are sent to `POST http://localhost:5000/api/extract`; the backend parses explicit fields in memory, flags missing details, and does not save prescription data. Image OCR is not enabled; images stay in the browser.
 
 ## Checks
 

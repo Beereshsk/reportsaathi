@@ -52,8 +52,8 @@ class TestApiContract(unittest.TestCase):
         ]:
             self.assertIn(required_schema, schemas, f"Missing component schema: {required_schema}")
 
-    def test_mock_extract_matches_rx01(self):
-        """DoD 2: Mock server returns deterministic responses matching rx-01-clean-standard.json."""
+    def test_manual_extract_matches_rx01_without_guessing_missing_strength(self):
+        """Extract explicit fields and flag strength not clearly present in the input."""
         rx01_path = os.path.join(FIXTURES_DIR, "rx-01-clean-standard.json")
         self.assertTrue(os.path.exists(rx01_path), f"Fixture not found: {rx01_path}")
 
@@ -83,6 +83,39 @@ class TestApiContract(unittest.TestCase):
             self.assertEqual(actual_med.get("meal_relation"), expected_med.get("meal_relation"))
             self.assertEqual(actual_med.get("duration_days"), expected_med.get("duration_days"))
             self.assertEqual(actual_med.get("is_ambiguous"), expected_med.get("is_ambiguous"))
+
+    def test_extract_uses_the_submitted_text_instead_of_demo_medicines(self):
+        response = self.client.post(
+            "/api/extract",
+            json={
+                "raw_text": "Tab ExampleMed 250mg - 1-0-1 - After Food - 3 days",
+                "language": "en",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["total_medicines_detected"], 1)
+        medicine = data["medicines"][0]
+        self.assertIn("ExampleMed", medicine["raw_name"])
+        self.assertEqual(medicine["dosage"], "250mg")
+        self.assertEqual(medicine["timing"], {"morning": 1, "afternoon": 0, "night": 1})
+        self.assertNotEqual(medicine["raw_name"], "Paracetamol 650mg")
+
+    def test_unrecognized_text_is_preserved_and_flagged(self):
+        response = self.client.post("/api/extract", json={"raw_text": "??? unclear handwriting"})
+
+        self.assertEqual(response.status_code, 200)
+        medicine = response.get_json()["medicines"][0]
+        self.assertEqual(medicine["raw_name"], "??? unclear handwriting")
+        self.assertIsNone(medicine["canonical_name"])
+        self.assertTrue(medicine["is_ambiguous"])
+
+    def test_image_extraction_is_not_claimed_when_ocr_is_unavailable(self):
+        response = self.client.post("/api/extract", json={"image_base64": "not-actually-an-image"})
+
+        self.assertEqual(response.status_code, 501)
+        self.assertEqual(response.get_json()["error_code"], "OCR_UNAVAILABLE")
 
     def test_all_ten_fixtures_exist_and_validate(self):
         """Validates that all 10 fixtures in tests/fixtures parse as valid JSON and have required keys."""

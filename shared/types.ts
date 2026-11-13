@@ -109,6 +109,7 @@ export interface HealthResponse {
 
 export type ErrorCode = 
   | "INVALID_REQUEST"
+  | "OCR_UNAVAILABLE"
   | "INVALID_FILE_TYPE" 
   | "PAYLOAD_TOO_LARGE" 
   | "BLURRY_PRESCRIPTION" 

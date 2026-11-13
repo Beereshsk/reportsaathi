@@ -83,7 +83,7 @@ flowchart TD
   - [x] CI pipeline (`ci.yml`) and staging blueprint (`staging.yml`, `render.yaml`, `vercel.json`) configured.
 * **Status:** Completed (PR-01 Walking Skeleton)
 
-**Local runability repair (2026-11-13):** Backend lint and Mypy checks now pass. The frontend serves the prescription notes workflow at port 3000 with explicit HTML, JavaScript, and CSS MIME types. Typed notes are posted to `POST /api/notes` and returned for display without persistence; image preview remains local. Mock extraction results are not presented as real readings.
+**Local runability repair (2026-11-13):** Backend lint and Mypy checks now pass. The frontend serves the prescription assistant at port 3000 with explicit HTML, JavaScript, and CSS MIME types. Typed instructions are posted to `POST /api/extract` and parsed in request memory without persistence. Only explicitly present fields are structured; missing details are flagged, and image preview remains local.
 
 **CI smoke test import fix (2026-11-13):** The integration workflow now runs the smoke tests as `python -m unittest backend.tests.test_smoke` from the repository root, preserving the package import path. All three smoke tests pass with this invocation.
 

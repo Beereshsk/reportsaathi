@@ -9,7 +9,7 @@
   },
   "expected_output": {
     "total_medicines": 2,
-    "has_ambiguous_entries": false,
+    "has_ambiguous_entries": true,
     "medicines": [
       {
         "raw_name": "Paracetamol 650mg",
@@ -24,8 +24,8 @@
         "is_ambiguous": false
       },
       {
-        "raw_name": "Pan-40",
-        "dosage": "40mg",
+        "raw_name": "Pan-40 (Pantoprazole)",
+        "dosage": "Unclear / not provided",
         "timing": {
           "morning": 1,
           "afternoon": 0,
@@ -33,7 +33,7 @@
         },
         "meal_relation": "before_food",
         "duration_days": 5,
-        "is_ambiguous": false
+        "is_ambiguous": true
       }
     ]
   },
